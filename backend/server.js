@@ -23,7 +23,7 @@ const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
 app.use(express.static(frontendDist));
 
 const VALID_TYPES = ['metro', 'county', 'city', 'state'];
-// Ordered smallest→largest so metro loads first and memory pressure stays low
+// Ordered smallest→largest so metro/state are available quickly while county/city download
 const AUTO_FETCH_TYPES = ['metro', 'state', 'county', 'city'];
 
 // ── Market data screener ────────────────────────────────────────────────────
@@ -163,7 +163,7 @@ async function runRefreshForTypes(label, types) {
   console.log(`[refresh] Done (${label})`);
 }
 
-// On startup: fetch any region type that is missing or stale (> 3 days old)
+// On startup: fetch any region type that is missing or stale
 async function startupRefresh() {
   const status = getStatus();
   const now = Date.now();

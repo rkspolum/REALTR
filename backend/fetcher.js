@@ -26,7 +26,7 @@ const HISTORY_CUTOFF = (() => {
   return d.toISOString().slice(0, 10);
 })();
 
-const BATCH_SIZE = 5000;
+const BATCH_SIZE = 20000;
 
 function stripQuotes(s) {
   if (typeof s !== 'string') return s;
@@ -112,6 +112,8 @@ export async function fetchRegionData(regionType) {
     const rl = readline.createInterface({ input: gunzip, crlfDelay: Infinity });
 
     let headers = null;
+    let saIdx = -1;
+    let periodEndIdx = -1;
     let batch = [];
     let totalInserted = 0;
 
@@ -129,16 +131,18 @@ export async function fetchRegionData(regionType) {
 
       if (!headers) {
         headers = values.map(h => h.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
+        saIdx = headers.indexOf('is_seasonally_adjusted');
+        periodEndIdx = headers.indexOf('period_end');
         return;
       }
 
+      // Fast pre-filters BEFORE expensive mapRow
+      if (saIdx >= 0 && values[saIdx]?.trim() === '1') return;
+      const periodEnd = stripQuotes(values[periodEndIdx] ?? '');
+      if (!periodEnd || periodEnd < HISTORY_CUTOFF) return;
+
       const row = mapRow(headers, values, regionType);
       if (!row.period_end) return;
-      // Skip seasonally-adjusted rows — they have null values for key metrics like price_drops
-      const saIdx = headers.indexOf('is_seasonally_adjusted');
-      if (saIdx >= 0 && values[saIdx]?.trim() === '1') return;
-      if (row.period_end < CUTOFF_DATE) return;    // 20-year cap (user preference)
-      if (row.period_end < HISTORY_CUTOFF) return; // keep only last 13 months for trend charts
 
       batch.push(row);
       if (batch.length >= BATCH_SIZE) flushBatch();
