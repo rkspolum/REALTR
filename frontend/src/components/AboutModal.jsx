@@ -4,11 +4,11 @@ const FILTER_GUIDE = [
   {
     section: 'Location Filters',
     items: [
-      { name: 'Region Type', desc: 'Choose the geographic level to screen: Metro Areas (MSAs), Counties, Cities, ZIP Codes, or States.' },
+      { name: 'Region Type', desc: 'Choose the geographic level to screen: Metro Areas (MSAs), Counties, Cities, or States.' },
       { name: 'Market Type', desc: "Pre-filters by supply balance. Seller's = under 3 months of supply (high demand). Buyer's = over 6 months (excess inventory). Balanced = 3–6 months." },
       { name: 'Property Type', desc: 'Filter by property category: Single Family Residential, Condo/Co-op, Townhouse, Multi-Family, or All Residential.' },
       { name: 'State', desc: 'Select one or more states to focus on. Checking multiple states shows markets across all selected states.' },
-      { name: 'Region Search', desc: 'Appears after selecting a state. Type a partial name to find a specific city, county, metro, or ZIP within your selected states.' },
+      { name: 'Region Search', desc: 'Appears after selecting a state. Type a partial name to find a specific city, county, or metro within your selected states.' },
     ],
   },
   {
@@ -42,7 +42,7 @@ const FILTER_GUIDE = [
 
 const COLUMN_GUIDE = [
   { name: 'Market Tag', desc: "Color-coded badge: Orange = Seller's market (<3 mo supply), Gray = Balanced (3–6 mo), Blue = Buyer's market (>6 mo)." },
-  { name: 'Region', desc: 'Name of the market (city, county, metro area, ZIP code, or state).' },
+  { name: 'Region', desc: 'Name of the market (city, county, metro area, or state).' },
   { name: 'State', desc: 'Two-letter state abbreviation.' },
   { name: 'Type', desc: 'Property type abbreviation: SFR = Single Family, Condo, TH = Townhouse, Multi = Multi-Family, All = All Residential.' },
   { name: 'Median Price', desc: 'Median sale price for the most recent data period.' },
@@ -89,7 +89,7 @@ export default function AboutModal({ onClose }) {
           <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 rounded-xl p-4 space-y-2">
             <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300">What is REALTR?</h3>
             <p className="text-sm text-blue-800 dark:text-blue-300 leading-relaxed">
-              REALTR is a real estate market screener powered by <span className="font-semibold">Redfin's public housing data</span>. It lets you analyze and compare U.S. housing markets across cities, counties, metros, ZIP codes, and states — all in one place.
+              REALTR is a real estate market screener powered by <span className="font-semibold">Redfin's public housing data</span>. It lets you analyze and compare U.S. housing markets across cities, counties, metros, and states — all in one place.
             </p>
             <p className="text-sm text-blue-800 dark:text-blue-300 leading-relaxed">
               Use the <span className="font-semibold">filters</span> on the left to narrow markets by price, supply conditions, volume, and more. Click any row in the table to see a <span className="font-semibold">detail page</span> with all metrics and historical trend charts. Save your filter combinations as <span className="font-semibold">presets</span> to revisit them later. Data updates automatically every Wednesday and Saturday.

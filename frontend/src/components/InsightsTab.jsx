@@ -9,7 +9,6 @@ const REGION_TYPES = [
   { value: 'metro',   label: 'Metro' },
   { value: 'county',  label: 'County' },
   { value: 'city',    label: 'City' },
-  { value: 'zip',     label: 'ZIP' },
   { value: 'state',   label: 'State' },
 ];
 

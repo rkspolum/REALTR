@@ -22,7 +22,7 @@ getDb(); // init on startup
 const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
 app.use(express.static(frontendDist));
 
-const VALID_TYPES = ['metro', 'county', 'city', 'zip', 'state'];
+const VALID_TYPES = ['metro', 'county', 'city', 'state'];
 const AUTO_FETCH_TYPES = ['metro', 'county', 'state'];
 
 // ── Market data screener ────────────────────────────────────────────────────

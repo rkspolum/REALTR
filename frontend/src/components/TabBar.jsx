@@ -5,7 +5,6 @@ const TABS = [
   { value: 'metro',    label: 'Metro' },
   { value: 'county',   label: 'County' },
   { value: 'city',     label: 'City' },
-  { value: 'zip',      label: 'ZIP' },
   { value: 'state',    label: 'State' },
 ];
 
@@ -13,11 +12,10 @@ const SEARCH_PLACEHOLDER = {
   metro:  'Search metro areas…',
   county: 'Search counties…',
   city:   'Search cities…',
-  zip:    'Search ZIP codes…',
   state:  'Search states…',
 };
 
-const REGION_TABS = new Set(['metro', 'county', 'city', 'zip', 'state']);
+const REGION_TABS = new Set(['metro', 'county', 'city', 'state']);
 
 export default function TabBar({ activeTab, onTabChange, search, onSearchChange }) {
   const showSearch = REGION_TABS.has(activeTab);

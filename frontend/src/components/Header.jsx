@@ -9,7 +9,6 @@ const API = '/api';
 const REGION_TYPES = [
   { value: 'metro',  label: 'Metro' },
   { value: 'county', label: 'County' },
-  { value: 'zip',    label: 'ZIP' },
   { value: 'state',  label: 'State' },
 ];
 
