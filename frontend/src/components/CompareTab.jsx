@@ -9,6 +9,36 @@ const API = '/api';
 
 const COMPARE_COLORS = ['#2563eb', '#dc2626', '#059669', '#d97706'];
 
+const COMPARISON_PRESETS = [
+  {
+    label: 'Sun Belt Boom',
+    subtitle: 'Austin · Nashville · Phoenix',
+    markets: [
+      { region: 'Austin', state_code: 'TX', region_type: 'metro' },
+      { region: 'Nashville', state_code: 'TN', region_type: 'metro' },
+      { region: 'Phoenix', state_code: 'AZ', region_type: 'metro' },
+    ],
+  },
+  {
+    label: 'Major Coasts',
+    subtitle: 'New York · Los Angeles · Miami',
+    markets: [
+      { region: 'New York', state_code: 'NY', region_type: 'metro' },
+      { region: 'Los Angeles', state_code: 'CA', region_type: 'metro' },
+      { region: 'Miami', state_code: 'FL', region_type: 'metro' },
+    ],
+  },
+  {
+    label: 'Most Affordable',
+    subtitle: 'Detroit · Memphis · Cleveland',
+    markets: [
+      { region: 'Detroit', state_code: 'MI', region_type: 'metro' },
+      { region: 'Memphis', state_code: 'TN', region_type: 'metro' },
+      { region: 'Cleveland', state_code: 'OH', region_type: 'metro' },
+    ],
+  },
+];
+
 const REGION_TYPES = [
   { value: 'metro',   label: 'Metro' },
   { value: 'county',  label: 'County' },
@@ -125,6 +155,29 @@ function AddMarketSearch({ onAdd, existingMarkets, disabled }) {
 
 export default function CompareTab() {
   const [markets, setMarkets] = useState([]);
+  const [presetLoading, setPresetLoading] = useState(false);
+
+  async function loadPreset(preset) {
+    setPresetLoading(true);
+    for (const m of preset.markets) {
+      try {
+        const params = new URLSearchParams({
+          region_type: m.region_type,
+          region_search: m.region,
+          property_type: 'All Residential',
+          limit: 5,
+        });
+        if (m.state_code) params.set('state_codes', m.state_code);
+        const res = await fetch(`${API}/market-data?${params}`);
+        const data = await res.json();
+        const match = (data.rows || []).find(r => r.state_code === m.state_code) || data.rows?.[0];
+        if (match) addMarket(match);
+      } catch (err) {
+        console.error('Failed to load preset market:', m.region, err);
+      }
+    }
+    setPresetLoading(false);
+  }
 
   function addMarket(m) {
     if (markets.length >= 4) return;
@@ -197,9 +250,25 @@ export default function CompareTab() {
 
       {/* Empty state */}
       {markets.length === 0 && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-12 text-center">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No markets added yet</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Search above to add markets to compare.</p>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center">
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">No markets added yet</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">Search above, or start with a preset comparison:</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {COMPARISON_PRESETS.map(preset => (
+              <button
+                key={preset.label}
+                onClick={() => loadPreset(preset)}
+                disabled={presetLoading}
+                className="flex flex-col items-center gap-1 px-5 py-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors disabled:opacity-50 disabled:cursor-wait"
+              >
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{preset.label}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">{preset.subtitle}</span>
+              </button>
+            ))}
+          </div>
+          {presetLoading && (
+            <p className="text-xs text-blue-500 dark:text-blue-400 mt-4 animate-pulse">Loading markets…</p>
+          )}
         </div>
       )}
 

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import MarketTag from './MarketTag.jsx';
+import InfoTip from './InfoTip.jsx';
 
 const ch = createColumnHelper();
 
@@ -15,13 +16,13 @@ const fmtPct    = (v, d = 1) => v == null ? '—' : `${v >= 0 ? '+' : ''}${(v*10
 const fmtNum    = v => v == null ? '—' : Number(v).toLocaleString();
 const fmtDollar = v => v == null ? '—' : `$${Math.round(v)}`;
 
-function PctCell({ v, invert = false }) {
+function PctCell({ v, invert = false, bold = false }) {
   if (v == null) return <span className="text-gray-300 dark:text-gray-600">—</span>;
   const pct = v * 100;
   const good = invert ? pct < 0 : pct > 0;
   const bad  = invert ? pct > 0 : pct < 0;
   return (
-    <span className={`font-medium ${good ? 'text-green-600 dark:text-green-400' : bad ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
+    <span className={`${bold ? 'font-bold' : 'font-medium'} ${good ? 'text-green-600 dark:text-green-400' : bad ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
       {pct > 0 ? '+' : ''}{pct.toFixed(1)}%
     </span>
   );
@@ -34,7 +35,12 @@ function DOMCell({ v }) {
 
 function MOSCell({ v }) {
   if (v == null) return <span className="text-gray-300 dark:text-gray-600">—</span>;
-  return <span className={v <= 3 ? 'text-orange-600 dark:text-orange-400 font-medium' : v >= 6 ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300'}>{Number(v).toFixed(1)}</span>;
+  if (v > 24) return (
+    <span className="text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded whitespace-nowrap">
+      Data Anomaly
+    </span>
+  );
+  return <span className={`font-bold ${v <= 3 ? 'text-orange-600 dark:text-orange-400' : v >= 6 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>{Number(v).toFixed(1)}</span>;
 }
 
 function STLCell({ v }) {
@@ -83,7 +89,7 @@ const BASE_COLUMNS = [
   }),
   ch.accessor('median_sale_price_yoy', {
     header: 'Price YoY',
-    cell: info => <PctCell v={info.getValue()} />,
+    cell: info => <PctCell v={info.getValue()} bold />,
     size: 90,
   }),
   ch.accessor('median_ppsf', {
@@ -158,6 +164,29 @@ const BASE_COLUMNS = [
     size: 80,
   }),
 ];
+
+const COLUMN_TIPS = {
+  market_tag:               "Color-coded badge: Seller's = under 3 months of supply (high demand), Buyer's = over 6 months (excess inventory).",
+  region:                   "Name of the geographic market (city, county, metro area, or state).",
+  state_code:               "Two-letter state abbreviation.",
+  property_type:            "Property category tracked: SFR = Single Family, Condo, TH = Townhouse, Multi = Multi-Family, All = All Residential.",
+  median_sale_price:        "Midpoint sale price — half of homes sold for more, half for less. Core indicator of market affordability.",
+  median_sale_price_yoy:    "Year-over-year % change in median sale price. Positive = appreciation, negative = depreciation.",
+  median_ppsf:              "Median price per square foot of sold homes. Useful for comparing value across markets with different home sizes.",
+  median_list_price:        "Median asking price for active listings. Compare to Median Sale Price to gauge how close homes close to asking.",
+  median_dom:               "Median days from listing to accepted offer. Under 20 = hot market. Over 60 = slow market with buyer leverage.",
+  months_of_supply:         "Months to sell all current inventory at the current pace. Under 3 = seller's market. Over 6 = buyer's market.",
+  avg_sale_to_list:         "Average sale price ÷ list price. Over 100% = homes closing above asking, a sign of bidding wars.",
+  sold_above_list:          "% of homes that sold above their asking price. High % = highly competitive, supply-constrained market.",
+  homes_sold:               "Total homes sold in the most recent data period. Low volume can signal an illiquid or slow market.",
+  homes_sold_yoy:           "Year-over-year % change in homes sold volume. Declining sales can precede price changes.",
+  new_listings:             "New listings added in the most recent period. Rising supply can signal increasing seller confidence.",
+  inventory:                "Total active listings at end of period. Low inventory drives competition; high inventory gives buyers more options.",
+  inventory_yoy:            "Year-over-year % change in inventory. Rising inventory tends to cool price growth.",
+  price_drops:              "% of active listings with at least one price reduction. High values signal overpriced listings or softening demand.",
+  off_market_in_two_weeks:  "% of homes that went off market within 2 weeks of listing — strong signal of demand intensity.",
+  period_end:               "The month/year of the most recent data available for this market.",
+};
 
 function SortIcon({ column }) {
   const s = column.getIsSorted();
@@ -265,6 +294,11 @@ export default function DataTable({
                   >
                     <div className="flex items-center gap-1">
                       {flexRender(header.column.columnDef.header, header.getContext())}
+                      {COLUMN_TIPS[header.column.id] && (
+                        <span onClick={e => e.stopPropagation()}>
+                          <InfoTip text={COLUMN_TIPS[header.column.id]} />
+                        </span>
+                      )}
                       <SortIcon column={header.column} />
                     </div>
                   </th>
@@ -285,10 +319,17 @@ export default function DataTable({
                 No data found. {total === 0 && 'Fetch data from Redfin using the button above, then click Apply.'}
               </td></tr>
             ) : (
-              table.getRowModel().rows.map((row, i) => (
+              table.getRowModel().rows.map((row, i) => {
+                const mos = row.original.months_of_supply;
+                const borderLeft = mos == null ? 'none'
+                  : mos < 3  ? '3px solid #f87171'   // red-400 — seller's
+                  : mos > 6  ? '3px solid #4ade80'   // green-400 — buyer's
+                  :             '3px solid #fbbf24';  // amber-400 — balanced
+                return (
                 <tr
                   key={row.id}
                   onClick={() => onRowClick?.(row.original)}
+                  style={{ borderLeft }}
                   className={`border-b border-gray-100 dark:border-gray-800 cursor-pointer transition-colors hover:bg-blue-50/60 dark:hover:bg-blue-950/20
                     ${i % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/40'}`}
                 >
@@ -298,7 +339,8 @@ export default function DataTable({
                     </td>
                   ))}
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>

@@ -3,6 +3,7 @@ import { ArrowLeft, Star, ArrowLeftRight, X, Search } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import MarketTag from './MarketTag.jsx';
 import TrendChart from './TrendChart.jsx';
+import InfoTip from './InfoTip.jsx';
 
 const API = '/api';
 
@@ -20,33 +21,35 @@ function fmtPct(v, dec = 1) {
 function fmtNum(v) { return v == null ? '—' : Number(v).toLocaleString(undefined, { maximumFractionDigits: 1 }); }
 
 const METRICS = [
-  { label: 'Median Sale Price',   key: 'median_sale_price',       fmt: v => fmtPrice(v) },
-  { label: 'List Price',          key: 'median_list_price',       fmt: v => fmtPrice(v) },
-  { label: 'Price/SqFt',         key: 'median_ppsf',             fmt: v => v != null ? `$${Math.round(v)}` : '—' },
-  { label: 'Price Change YoY',   key: 'median_sale_price_yoy',   fmt: v => fmtPct(v) },
-  { label: 'PPSF Change YoY',    key: 'median_ppsf_yoy',         fmt: v => fmtPct(v) },
-  { label: 'Days on Market',     key: 'median_dom',              fmt: v => v != null ? `${Math.round(v)} days` : '—' },
-  { label: 'Months of Supply',   key: 'months_of_supply',        fmt: v => v != null ? `${Number(v).toFixed(1)} mo` : '—' },
-  { label: 'Homes Sold',         key: 'homes_sold',              fmt: fmtNum },
-  { label: 'Homes Sold YoY',     key: 'homes_sold_yoy',          fmt: v => fmtPct(v) },
-  { label: 'New Listings',       key: 'new_listings',            fmt: fmtNum },
-  { label: 'New Listings YoY',   key: 'new_listings_yoy',        fmt: v => fmtPct(v) },
-  { label: 'Inventory',          key: 'inventory',               fmt: fmtNum },
-  { label: 'Inventory YoY',      key: 'inventory_yoy',           fmt: v => fmtPct(v) },
-  { label: 'Sale-to-List',       key: 'avg_sale_to_list',        fmt: v => v != null ? `${(v * 100).toFixed(1)}%` : '—' },
-  { label: 'Sold Above List',    key: 'sold_above_list',         fmt: v => fmtPct(v, 0) },
-  { label: 'Price Drops',        key: 'price_drops',             fmt: v => fmtPct(v, 0) },
-  { label: 'Off Mkt <2 Weeks',   key: 'off_market_in_two_weeks', fmt: v => fmtPct(v, 0) },
-  { label: 'Data Period',        key: 'period_end',              fmt: v => v?.slice(0, 10) || '—' },
+  { label: 'Median Sale Price',   key: 'median_sale_price',       fmt: v => fmtPrice(v),                                 tip: 'Midpoint sale price — half of homes sold for more, half for less.' },
+  { label: 'List Price',          key: 'median_list_price',       fmt: v => fmtPrice(v),                                 tip: 'Median asking price. Compare to Median Sale Price to gauge whether homes close above or below asking.' },
+  { label: 'Price/SqFt',         key: 'median_ppsf',             fmt: v => v != null ? `$${Math.round(v)}` : '—',       tip: 'Median price per square foot. Useful for comparing value across markets with different average home sizes.' },
+  { label: 'Price Change YoY',   key: 'median_sale_price_yoy',   fmt: v => fmtPct(v),                                   tip: 'Year-over-year % change in median sale price. Positive = appreciation, negative = depreciation.' },
+  { label: 'PPSF Change YoY',    key: 'median_ppsf_yoy',         fmt: v => fmtPct(v),                                   tip: 'Year-over-year % change in price per square foot — a size-normalized view of price trends.' },
+  { label: 'Days on Market',     key: 'median_dom',              fmt: v => v != null ? `${Math.round(v)} days` : '—',   tip: 'Median days from listing to accepted offer. Under 20 = hot market. Over 60 = buyer has leverage.' },
+  { label: 'Months of Supply',   key: 'months_of_supply',        fmt: v => v != null ? `${Number(v).toFixed(1)} mo` : '—', tip: "Months to sell all current inventory at today's sales pace. Under 3 = seller's market. Over 6 = buyer's market." },
+  { label: 'Homes Sold',         key: 'homes_sold',              fmt: fmtNum,                                            tip: 'Total homes sold in the most recent data period. Low volume can signal an illiquid or slow market.' },
+  { label: 'Homes Sold YoY',     key: 'homes_sold_yoy',          fmt: v => fmtPct(v),                                   tip: 'Year-over-year % change in homes sold. Declining sales volume can precede price changes.' },
+  { label: 'New Listings',       key: 'new_listings',            fmt: fmtNum,                                            tip: 'New listings added in the most recent period. Rising supply can signal increasing seller confidence or market cooling.' },
+  { label: 'New Listings YoY',   key: 'new_listings_yoy',        fmt: v => fmtPct(v),                                   tip: 'Year-over-year % change in new listings. Rising new supply tends to soften price growth.' },
+  { label: 'Inventory',          key: 'inventory',               fmt: fmtNum,                                            tip: 'Total active listings at end of period. Low inventory drives competition; high inventory gives buyers more options.' },
+  { label: 'Inventory YoY',      key: 'inventory_yoy',           fmt: v => fmtPct(v),                                   tip: 'Year-over-year % change in inventory. Rising inventory tends to cool price growth over time.' },
+  { label: 'Sale-to-List',       key: 'avg_sale_to_list',        fmt: v => v != null ? `${(v * 100).toFixed(1)}%` : '—', tip: 'Average sale price ÷ list price. Over 100% = homes closing above asking, a sign of bidding wars.' },
+  { label: 'Sold Above List',    key: 'sold_above_list',         fmt: v => fmtPct(v, 0),                                tip: '% of homes that sold above asking price. High % = highly competitive, supply-constrained market.' },
+  { label: 'Price Drops',        key: 'price_drops',             fmt: v => fmtPct(v, 0),                                tip: '% of active listings with at least one price reduction — signals overpriced listings or softening demand.' },
+  { label: 'Off Mkt <2 Weeks',   key: 'off_market_in_two_weeks', fmt: v => fmtPct(v, 0),                                tip: '% of homes that went off market within 2 weeks of listing — a strong signal of demand intensity.' },
+  { label: 'Data Period',        key: 'period_end',              fmt: v => v?.slice(0, 10) || '—',                      tip: 'The month/year of the most recent data available for this market from Redfin.' },
 ];
 
-function MetricCard({ label, value, highlight }) {
+function MetricCard({ label, value, highlight, tip }) {
   return (
     <div className={`rounded-xl border p-3 flex flex-col gap-1
       ${highlight
         ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800'
         : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-700'}`}>
-      <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">{label}</span>
+      <span className="text-xs text-gray-400 dark:text-gray-500 font-medium flex items-center">
+        {label}{tip && <InfoTip text={tip} />}
+      </span>
       <span className={`text-base font-bold ${highlight ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>{value}</span>
     </div>
   );
@@ -227,6 +230,7 @@ export default function DetailPage({ market, onBack, isWatched, onWatchlistToggl
                 label={m.label}
                 value={m.fmt(market[m.key])}
                 highlight={highlightKeys.has(m.key)}
+                tip={m.tip}
               />
             ))}
           </div>

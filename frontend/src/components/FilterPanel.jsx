@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { SlidersHorizontal, RotateCcw, CheckCheck, ChevronDown } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { SlidersHorizontal, RotateCcw, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import DualRangeSlider from './DualRangeSlider.jsx';
 import PresetManager from './PresetManager.jsx';
 import InfoTip from './InfoTip.jsx';
@@ -156,10 +156,28 @@ const SLIDER_SECTIONS = [
 async function fetchStates() { return (await fetch(`${API}/states`)).json(); }
 async function fetchPropertyTypes() { return (await fetch(`${API}/property-types`)).json(); }
 
-export default function FilterPanel({ onApply, regionType = 'metro' }) {
+export default function FilterPanel({ onApply, regionType = 'metro', defaultFilters }) {
   const [ranges, setRanges] = useState(FALLBACK);
-  const [local, setLocal] = useState(() => makeDefaultLocal(FALLBACK));
+  const [local, setLocal] = useState(() => ({
+    ...makeDefaultLocal(FALLBACK, regionType),
+    // Restore any filters that were active when this panel mounts (e.g. from URL state)
+    ...(defaultFilters ? { property_type: defaultFilters.property_type || '', state_codes: defaultFilters.state_codes || '' } : {}),
+  }));
   const [collapsedSections, setCollapsedSections] = useState(new Set());
+
+  // Live filtering: call onApply 300ms after any local change
+  const onApplyRef = useRef(onApply);
+  useEffect(() => { onApplyRef.current = onApply; });
+  const rangesRef = useRef(ranges);
+  useEffect(() => { rangesRef.current = ranges; }, [ranges]);
+  const isMountedRef = useRef(false);
+  useEffect(() => {
+    if (!isMountedRef.current) { isMountedRef.current = true; return; }
+    const timer = setTimeout(() => {
+      onApplyRef.current(toApplied(local, rangesRef.current));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [local]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync regionType prop → local state
   useEffect(() => {
@@ -204,8 +222,6 @@ export default function FilterPanel({ onApply, regionType = 'metro' }) {
   }, [rangesApi]);
 
   const set = useCallback((k, v) => setLocal(prev => ({ ...prev, [k]: v })), []);
-
-  function handleApply() { onApply(toApplied(local, ranges)); }
 
   function handleReset() {
     const def = makeDefaultLocal(ranges, local.region_type);
@@ -252,12 +268,6 @@ export default function FilterPanel({ onApply, regionType = 'metro' }) {
             <RotateCcw size={11} /> Reset
           </button>
         </div>
-        <button
-          onClick={handleApply}
-          className="w-full flex items-center justify-center gap-2 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
-        >
-          <CheckCheck size={15} /> Apply Filters
-        </button>
       </div>
 
       {/* Scrollable content */}

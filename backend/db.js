@@ -165,7 +165,7 @@ export function bulkInsert(rows) {
 
 export function pruneOldData(regionType) {
   const d = new Date();
-  d.setMonth(d.getMonth() - 13);
+  d.setMonth(d.getMonth() - 24);
   const cutoff = d.toISOString().slice(0, 10);
   db.prepare('DELETE FROM market_data WHERE region_type = ? AND period_end < ?').run(regionType, cutoff);
 }
@@ -319,7 +319,7 @@ export function getDashboardData(regionType = 'metro', stateCodes = [], property
 
   return {
     buyersMarkets: db.prepare(
-      `SELECT * ${base} AND months_of_supply IS NOT NULL ORDER BY months_of_supply DESC LIMIT 10`
+      `SELECT * ${base} AND months_of_supply IS NOT NULL AND months_of_supply <= 24 ORDER BY months_of_supply DESC LIMIT 10`
     ).all(...p),
 
     sellersMarkets: db.prepare(

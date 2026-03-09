@@ -47,17 +47,25 @@ function MarketCard({ market, metricLabel, metricValue, onClick }) {
   );
 }
 
-function DashSection({ title, subtitle, icon: Icon, iconColor, markets = [], metricLabel, metricFn, onMarketClick, loading }) {
+function DashSection({ title, subtitle, icon: Icon, iconColor, markets = [], metricLabel, metricFn, onMarketClick, loading, onSectionClick }) {
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden flex flex-col">
       <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
-        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${iconColor}`}>
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${iconColor}`}>
           <Icon size={14} className="text-white" />
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
           <p className="text-xs text-gray-400 dark:text-gray-500">{subtitle}</p>
         </div>
+        {onSectionClick && (
+          <button
+            onClick={onSectionClick}
+            className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium flex-shrink-0 transition-colors"
+          >
+            View all <ChevronRight size={12} />
+          </button>
+        )}
       </div>
       <div className="flex-1 overflow-y-auto divide-y divide-gray-50 dark:divide-gray-800" style={{ maxHeight: 360 }}>
         {loading ? (
@@ -90,7 +98,7 @@ function DashSection({ title, subtitle, icon: Icon, iconColor, markets = [], met
   );
 }
 
-export default function Dashboard({ regionType = 'metro', stateCodes = '', propertyType = '', onMarketClick }) {
+export default function Dashboard({ regionType = 'metro', stateCodes = '', propertyType = '', onMarketClick, onSectionClick }) {
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard', regionType, stateCodes, propertyType],
     queryFn: async () => {
@@ -111,6 +119,7 @@ export default function Dashboard({ regionType = 'metro', stateCodes = '', prope
       markets: data?.buyersMarkets,
       metricLabel: 'Mos. Supply',
       metricFn: m => fmtMos(m.months_of_supply),
+      navConfig: { sortCol: 'months_of_supply', sortDir: 'desc' },
     },
     {
       title: "Top Seller's Markets",
@@ -120,6 +129,7 @@ export default function Dashboard({ regionType = 'metro', stateCodes = '', prope
       markets: data?.sellersMarkets,
       metricLabel: 'Mos. Supply',
       metricFn: m => fmtMos(m.months_of_supply),
+      navConfig: { sortCol: 'months_of_supply', sortDir: 'asc' },
     },
     {
       title: 'Most Affordable',
@@ -129,6 +139,7 @@ export default function Dashboard({ regionType = 'metro', stateCodes = '', prope
       markets: data?.affordable,
       metricLabel: 'Median Price',
       metricFn: m => fmtPrice(m.median_sale_price),
+      navConfig: { sortCol: 'median_sale_price', sortDir: 'asc' },
     },
     {
       title: 'Fastest Appreciating',
@@ -138,6 +149,7 @@ export default function Dashboard({ regionType = 'metro', stateCodes = '', prope
       markets: data?.appreciating,
       metricLabel: 'Sale/List',
       metricFn: m => fmtStl(m.avg_sale_to_list),
+      navConfig: { sortCol: 'avg_sale_to_list', sortDir: 'desc' },
     },
     {
       title: 'Rising Inventory',
@@ -147,6 +159,7 @@ export default function Dashboard({ regionType = 'metro', stateCodes = '', prope
       markets: data?.risingInventory,
       metricLabel: 'Inv. YoY',
       metricFn: m => fmtPct(m.inventory_yoy),
+      navConfig: { sortCol: 'inventory_yoy', sortDir: 'desc' },
     },
     {
       title: 'Most Price Cuts',
@@ -156,6 +169,7 @@ export default function Dashboard({ regionType = 'metro', stateCodes = '', prope
       markets: data?.mostPriceDrops,
       metricLabel: '% Cut',
       metricFn: m => m.price_drops != null ? `${(m.price_drops * 100).toFixed(0)}%` : '—',
+      navConfig: { sortCol: 'price_drops', sortDir: 'desc' },
     },
   ];
 
@@ -168,6 +182,9 @@ export default function Dashboard({ regionType = 'metro', stateCodes = '', prope
             {...s}
             loading={isLoading}
             onMarketClick={onMarketClick}
+            onSectionClick={onSectionClick && s.navConfig
+              ? () => onSectionClick({ ...s.navConfig, regionType })
+              : undefined}
           />
         ))}
       </div>

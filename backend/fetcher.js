@@ -19,10 +19,10 @@ const CUTOFF_DATE = (() => {
   return d.toISOString().slice(0, 10);
 })();
 
-// Keep 13 months of history per region for trend charts
+// Keep 24 months of history per region for trend charts
 const HISTORY_CUTOFF = (() => {
   const d = new Date();
-  d.setMonth(d.getMonth() - 13);
+  d.setMonth(d.getMonth() - 24);
   return d.toISOString().slice(0, 10);
 })();
 

@@ -118,6 +118,15 @@ export default function App() {
     setPage(0);
   }
 
+  function handleInsightsSectionClick({ sortCol, sortDir, regionType: navRegion }) {
+    const tab = navRegion || 'metro';
+    setActiveTab(tab);
+    setSortCol(sortCol);
+    setSortDir(sortDir);
+    setAppliedFilters(DEFAULT_APPLIED);
+    setPage(0);
+  }
+
   // Sync state → URL
   useEffect(() => {
     const params = new URLSearchParams();
@@ -238,7 +247,7 @@ export default function App() {
 
       <div className="flex flex-1 overflow-hidden">
         {activeTab !== 'compare' && activeTab !== 'insights' && (
-          <FilterPanel onApply={handleApply} regionType={activeTab} />
+          <FilterPanel onApply={handleApply} regionType={activeTab} defaultFilters={appliedFilters} />
         )}
 
         <main className="flex-1 overflow-hidden flex flex-col">
@@ -252,7 +261,7 @@ export default function App() {
           {activeTab === 'compare' ? (
             <CompareTab />
           ) : activeTab === 'insights' ? (
-            <InsightsTab onMarketClick={setSelectedMarket} />
+            <InsightsTab onMarketClick={setSelectedMarket} onSectionClick={handleInsightsSectionClick} />
           ) : (
             <>
               <SummaryBar filters={effectiveFilters} />

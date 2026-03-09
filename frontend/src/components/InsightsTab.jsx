@@ -12,7 +12,7 @@ const REGION_TYPES = [
   { value: 'state',   label: 'State' },
 ];
 
-export default function InsightsTab({ onMarketClick }) {
+export default function InsightsTab({ onMarketClick, onSectionClick }) {
   const [regionType, setRegionType] = useState('metro');
   const [selectedStates, setSelectedStates] = useState([]);
   const [statePickerOpen, setStatePickerOpen] = useState(false);
@@ -125,6 +125,7 @@ export default function InsightsTab({ onMarketClick }) {
           stateCodes={stateCodes}
           propertyType=""
           onMarketClick={onMarketClick}
+          onSectionClick={onSectionClick}
         />
       </div>
     </div>
