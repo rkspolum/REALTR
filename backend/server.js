@@ -24,7 +24,7 @@ app.use(express.static(frontendDist));
 
 const VALID_TYPES = ['metro', 'county', 'city', 'state'];
 // Ordered smallest→largest so metro loads first and memory pressure stays low
-const AUTO_FETCH_TYPES = ['metro', 'state', 'county'];
+const AUTO_FETCH_TYPES = ['metro', 'state', 'county', 'city'];
 
 // ── Market data screener ────────────────────────────────────────────────────
 app.get('/api/market-data', (req, res) => {
@@ -183,7 +183,7 @@ async function startupRefresh() {
   runRefreshForTypes('startup', staleTypes).catch(err => console.error('[startup] Error:', err.message));
 }
 
-// Scheduled refresh: Wednesday & Saturday at 3 AM (city excluded)
+// Scheduled refresh: Wednesday & Saturday at 3 AM
 cron.schedule('0 3 * * 6', () => runRefreshForTypes('Saturday', AUTO_FETCH_TYPES));
 cron.schedule('0 3 * * 3', () => runRefreshForTypes('Wednesday', AUTO_FETCH_TYPES));
 

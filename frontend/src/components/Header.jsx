@@ -8,8 +8,9 @@ const API = '/api';
 
 const REGION_TYPES = [
   { value: 'metro',  label: 'Metro' },
-  { value: 'county', label: 'County' },
   { value: 'state',  label: 'State' },
+  { value: 'county', label: 'County' },
+  { value: 'city',   label: 'City' },
 ];
 
 function StatusDot({ state }) {

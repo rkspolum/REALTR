@@ -316,7 +316,7 @@ export default function DataTable({
               </td></tr>
             ) : data.length === 0 ? (
               <tr><td colSpan={columns.length} className="text-center py-12 text-gray-400 dark:text-gray-500">
-                No data found. {total === 0 && 'Fetch data from Redfin using the button above, then click Apply.'}
+                No markets match your filters. Try adjusting the filters on the left or wait for data to finish loading.
               </td></tr>
             ) : (
               table.getRowModel().rows.map((row, i) => {
