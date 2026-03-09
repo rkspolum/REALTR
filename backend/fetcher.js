@@ -114,6 +114,7 @@ export async function fetchRegionData(regionType) {
     let headers = null;
     let saIdx = -1;
     let periodEndIdx = -1;
+    let propertyTypeIdx = -1;
     let batch = [];
     let totalInserted = 0;
 
@@ -133,6 +134,7 @@ export async function fetchRegionData(regionType) {
         headers = values.map(h => h.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
         saIdx = headers.indexOf('is_seasonally_adjusted');
         periodEndIdx = headers.indexOf('period_end');
+        propertyTypeIdx = headers.indexOf('property_type');
         return;
       }
 
@@ -140,6 +142,11 @@ export async function fetchRegionData(regionType) {
       if (saIdx >= 0 && values[saIdx]?.trim() === '1') return;
       const periodEnd = stripQuotes(values[periodEndIdx] ?? '');
       if (!periodEnd || periodEnd < HISTORY_CUTOFF) return;
+      // City file is huge — only store "All Residential" to keep row count manageable
+      if (regionType === 'city' && propertyTypeIdx >= 0) {
+        const pt = stripQuotes(values[propertyTypeIdx] ?? '');
+        if (pt !== 'All Residential') return;
+      }
 
       const row = mapRow(headers, values, regionType);
       if (!row.period_end) return;
