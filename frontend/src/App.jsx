@@ -85,10 +85,14 @@ function useAutoRefresh() {
     }
     if (anyJustCompleted) qc.invalidateQueries();
   }, [statusData, qc]);
+
+  return statusData;
 }
 
+const ACTIVE_STATES = new Set(['downloading', 'parsing', 'inserting', 'indexing']);
+
 export default function App() {
-  useAutoRefresh();
+  const statusData = useAutoRefresh();
   const [appliedFilters, setAppliedFilters] = useState(urlState.filters);
   const [page, setPage]         = useState(urlState.page);
   const [sortCol, setSortCol]   = useState(urlState.sortCol);
@@ -208,9 +212,29 @@ export default function App() {
     );
   }
 
+  const fetchProgress = statusData?.fetchProgress || {};
+  const dbStatus = statusData?.dbStatus || [];
+  const activeTypes = Object.entries(fetchProgress).filter(([, fp]) => ACTIVE_STATES.has(fp?.state));
+  const noDataYet = dbStatus.length === 0 && activeTypes.length > 0;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+
+      {noDataYet && (
+        <div className="bg-blue-600 text-white text-sm px-4 py-2 flex items-center gap-3 flex-wrap">
+          <span className="animate-pulse">⬤</span>
+          <span className="font-medium">Loading data for the first time — this takes a few minutes.</span>
+          <span className="text-blue-200">
+            {activeTypes.map(([type, fp]) => {
+              const label = type.charAt(0).toUpperCase() + type.slice(1);
+              const rows = fp.rowsInserted ? ` (${(fp.rowsInserted / 1000).toFixed(0)}K rows)` : '';
+              return `${label}: ${fp.state}${rows}`;
+            }).join(' · ')}
+          </span>
+          <span className="text-blue-200 text-xs">The page will refresh automatically when ready.</span>
+        </div>
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         {activeTab !== 'compare' && activeTab !== 'insights' && (

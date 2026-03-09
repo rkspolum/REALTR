@@ -23,7 +23,8 @@ const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
 app.use(express.static(frontendDist));
 
 const VALID_TYPES = ['metro', 'county', 'city', 'state'];
-const AUTO_FETCH_TYPES = ['metro', 'county', 'state'];
+// Ordered smallest→largest so metro loads first and memory pressure stays low
+const AUTO_FETCH_TYPES = ['metro', 'state', 'county'];
 
 // ── Market data screener ────────────────────────────────────────────────────
 app.get('/api/market-data', (req, res) => {
@@ -151,12 +152,14 @@ function isInProgress(type) {
 async function runRefreshForTypes(label, types) {
   const toFetch = types.filter(t => !isInProgress(t));
   if (toFetch.length === 0) return;
-  console.log(`[refresh] Starting (${label}) in parallel for: ${toFetch.join(', ')}`);
-  await Promise.allSettled(
-    toFetch.map(t =>
-      fetchRegionData(t).catch(err => console.error(`[refresh] ${t} failed:`, err.message))
-    )
-  );
+  console.log(`[refresh] Starting (${label}) sequentially for: ${toFetch.join(', ')}`);
+  for (const t of toFetch) {
+    try {
+      await fetchRegionData(t);
+    } catch (err) {
+      console.error(`[refresh] ${t} failed:`, err.message);
+    }
+  }
   console.log(`[refresh] Done (${label})`);
 }
 
