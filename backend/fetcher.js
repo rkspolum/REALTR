@@ -1,7 +1,7 @@
 import axios from 'axios';
 import zlib from 'zlib';
 import readline from 'readline';
-import { bulkInsert, clearDataForType, upsertStatus, updateLatestFlags, getMaxPeriod } from './db.js';
+import { bulkInsert, pruneOldData, upsertStatus, updateLatestFlags, getMaxPeriod } from './db.js';
 
 const REDFIN_URLS = {
   metro:  'https://redfin-public-data.s3.us-west-2.amazonaws.com/redfin_market_tracker/redfin_metro_market_tracker.tsv000.gz',
@@ -87,8 +87,6 @@ export async function fetchRegionData(regionType) {
   const url = REDFIN_URLS[regionType];
   if (!url) throw new Error(`Unknown region type: ${regionType}`);
 
-  // Clear existing data BEFORE downloading (so partial success is better than nothing)
-  clearDataForType(regionType);
   fetchStatus[regionType] = { state: 'downloading', rowsInserted: 0, startedAt: new Date().toISOString() };
   console.log(`[${regionType}] Downloading from Redfin...`);
 
@@ -137,6 +135,9 @@ export async function fetchRegionData(regionType) {
 
       const row = mapRow(headers, values, regionType);
       if (!row.period_end) return;
+      // Skip seasonally-adjusted rows — they have null values for key metrics like price_drops
+      const saIdx = headers.indexOf('is_seasonally_adjusted');
+      if (saIdx >= 0 && values[saIdx]?.trim() === '1') return;
       if (row.period_end < CUTOFF_DATE) return;    // 20-year cap (user preference)
       if (row.period_end < HISTORY_CUTOFF) return; // keep only last 13 months for trend charts
 
@@ -154,6 +155,7 @@ export async function fetchRegionData(regionType) {
 
         const maxPeriod = getMaxPeriod(regionType);
         upsertStatus(regionType, maxPeriod, totalInserted);
+        pruneOldData(regionType);
 
         fetchStatus[regionType] = {
           state: 'done',

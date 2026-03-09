@@ -20,7 +20,7 @@ export default function DualRangeSlider({
       <div className="relative" style={{ height: 20 }}>
         {/* Grey track */}
         <div
-          className="absolute rounded-full bg-gray-200"
+          className="absolute rounded-full bg-gray-200 dark:bg-gray-700"
           style={{ top: '50%', left: 0, right: 0, height: 4, transform: 'translateY(-50%)' }}
         />
         {/* Blue fill */}
@@ -60,10 +60,10 @@ export default function DualRangeSlider({
 
       {/* Value labels */}
       <div className="flex justify-between mt-1.5">
-        <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+        <span className="text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1.5 py-0.5 rounded">
           {format(safeMin)}
         </span>
-        <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+        <span className="text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1.5 py-0.5 rounded">
           {format(safeMax)}
         </span>
       </div>

@@ -23,6 +23,7 @@ const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
 app.use(express.static(frontendDist));
 
 const VALID_TYPES = ['metro', 'county', 'city', 'zip', 'state'];
+const AUTO_FETCH_TYPES = ['metro', 'county', 'zip', 'state'];
 
 // ── Market data screener ────────────────────────────────────────────────────
 app.get('/api/market-data', (req, res) => {
@@ -139,21 +140,46 @@ app.get('/api/summary', (req, res) => {
   }
 });
 
-// ── Scheduled auto-refresh ──────────────────────────────────────────────────
-const AUTO_REFRESH_TYPES = ['metro', 'county', 'city'];
+// ── Auto-refresh helpers ─────────────────────────────────────────────────────
+const STALE_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 1 day — fetch on startup if data is older than this
 
-async function runScheduledRefresh(label) {
-  console.log(`[cron] Scheduled refresh (${label})`);
-  for (const type of AUTO_REFRESH_TYPES) {
-    const s = fetchStatus[type];
-    if (s?.state === 'downloading' || s?.state === 'parsing' || s?.state === 'inserting' || s?.state === 'indexing') continue;
-    try { await fetchRegionData(type); } catch (err) { console.error(`[cron] ${type} failed:`, err.message); }
-  }
-  console.log(`[cron] Scheduled refresh (${label}) done.`);
+function isInProgress(type) {
+  const s = fetchStatus[type]?.state;
+  return s === 'downloading' || s === 'parsing' || s === 'inserting' || s === 'indexing';
 }
 
-cron.schedule('0 3 * * 6', () => runScheduledRefresh('Saturday'));  // catches 3rd-Friday monthly release
-cron.schedule('0 3 * * 3', () => runScheduledRefresh('Wednesday')); // catches weekly update
+async function runRefreshForTypes(label, types) {
+  console.log(`[refresh] Starting (${label}) for: ${types.join(', ')}`);
+  for (const type of types) {
+    if (isInProgress(type)) { console.log(`[refresh] ${type} already in progress, skipping`); continue; }
+    try { await fetchRegionData(type); } catch (err) { console.error(`[refresh] ${type} failed:`, err.message); }
+  }
+  console.log(`[refresh] Done (${label})`);
+}
+
+// On startup: fetch any region type that is missing or stale (> 3 days old)
+async function startupRefresh() {
+  const status = getStatus();
+  const now = Date.now();
+  const staleTypes = AUTO_FETCH_TYPES.filter(type => {
+    if (isInProgress(type)) return false;
+    const row = status.find(r => r.region_type === type);
+    if (!row) return true; // no data at all
+    const age = now - new Date(row.fetched_at).getTime();
+    return age > STALE_THRESHOLD_MS;
+  });
+  if (staleTypes.length === 0) {
+    console.log('[startup] All region data is up-to-date.');
+    return;
+  }
+  console.log(`[startup] Auto-fetching stale/missing types: ${staleTypes.join(', ')}`);
+  // Fire in background so server is immediately responsive
+  runRefreshForTypes('startup', staleTypes).catch(err => console.error('[startup] Error:', err.message));
+}
+
+// Scheduled refresh: Wednesday & Saturday at 3 AM (city excluded)
+cron.schedule('0 3 * * 6', () => runRefreshForTypes('Saturday', AUTO_FETCH_TYPES));
+cron.schedule('0 3 * * 3', () => runRefreshForTypes('Wednesday', AUTO_FETCH_TYPES));
 
 // ── Catch-all: serve frontend for any non-API route ─────────────────────────
 app.get('*', (req, res) => {
@@ -162,5 +188,6 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Redfin Screener backend → http://localhost:${PORT}`);
-  console.log('Auto-refresh: Wednesdays & Saturdays at 3:00 AM.');
+  console.log('Auto-refresh: on startup (if stale) + Wednesdays & Saturdays at 3:00 AM.');
+  startupRefresh();
 });

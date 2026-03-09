@@ -86,6 +86,19 @@ function initSchema() {
 
   // Create is_latest index after ensuring column exists
   db.exec('CREATE INDEX IF NOT EXISTS idx_is_latest ON market_data(is_latest, region_type)');
+
+  // Migration: add unique index to prevent duplicate rows per market+period
+  try {
+    db.exec(`
+      DELETE FROM market_data WHERE id NOT IN (
+        SELECT MAX(id) FROM market_data
+        GROUP BY region_type, region, state_code, property_type, period_end
+      )
+    `);
+    db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_market ON market_data(region_type, region, state_code, property_type, period_end)`);
+  } catch {
+    // index already exists
+  }
 }
 
 // ── Internal: mark the most recent period per (region, state_code, property_type) ──
@@ -117,7 +130,7 @@ export function clearDataForType(regionType) {
 export function bulkInsert(rows) {
   if (rows.length === 0) return;
   const insert = db.prepare(`
-    INSERT INTO market_data (
+    INSERT OR REPLACE INTO market_data (
       region_type, region, city, state, state_code, property_type,
       period_begin, period_end,
       median_sale_price, median_sale_price_mom, median_sale_price_yoy,
@@ -148,6 +161,13 @@ export function bulkInsert(rows) {
     )
   `);
   db.transaction(rs => { for (const r of rs) insert.run(r); })(rows);
+}
+
+export function pruneOldData(regionType) {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 13);
+  const cutoff = d.toISOString().slice(0, 10);
+  db.prepare('DELETE FROM market_data WHERE region_type = ? AND period_end < ?').run(regionType, cutoff);
 }
 
 export function upsertStatus(regionType, periodEnd, rowCount) {
@@ -312,6 +332,14 @@ export function getDashboardData(regionType = 'metro', stateCodes = [], property
 
     appreciating: db.prepare(
       `SELECT * ${base} AND avg_sale_to_list IS NOT NULL AND homes_sold >= 10 ORDER BY avg_sale_to_list DESC LIMIT 10`
+    ).all(...p),
+
+    risingInventory: db.prepare(
+      `SELECT * ${base} AND inventory_yoy IS NOT NULL ORDER BY inventory_yoy DESC LIMIT 10`
+    ).all(...p),
+
+    mostPriceDrops: db.prepare(
+      `SELECT * ${base} AND price_drops IS NOT NULL ORDER BY price_drops DESC LIMIT 10`
     ).all(...p),
   };
 }

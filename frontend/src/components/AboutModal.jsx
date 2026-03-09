@@ -66,18 +66,18 @@ const COLUMN_GUIDE = [
 export default function AboutModal({ onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col"
+        className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 w-full max-w-2xl max-h-[85vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">About REALTR</h2>
-            <p className="text-xs text-gray-400">Filter & column reference guide</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">About REALTR</h2>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Filter & column reference guide</p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -86,28 +86,28 @@ export default function AboutModal({ onClose }) {
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
 
           {/* About blurb */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-blue-900">What is REALTR?</h3>
-            <p className="text-sm text-blue-800 leading-relaxed">
+          <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 rounded-xl p-4 space-y-2">
+            <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300">What is REALTR?</h3>
+            <p className="text-sm text-blue-800 dark:text-blue-300 leading-relaxed">
               REALTR is a real estate market screener powered by <span className="font-semibold">Redfin's public housing data</span>. It lets you analyze and compare U.S. housing markets across cities, counties, metros, ZIP codes, and states — all in one place.
             </p>
-            <p className="text-sm text-blue-800 leading-relaxed">
-              Use the <span className="font-semibold">filters</span> on the left to narrow markets by price, supply conditions, volume, and more. Click any row in the table to see a <span className="font-semibold">detail page</span> with all metrics and 12-month trend charts. Save your filter combinations as <span className="font-semibold">presets</span> to revisit them later. Data updates automatically every Wednesday and Saturday to match Redfin's release schedule.
+            <p className="text-sm text-blue-800 dark:text-blue-300 leading-relaxed">
+              Use the <span className="font-semibold">filters</span> on the left to narrow markets by price, supply conditions, volume, and more. Click any row in the table to see a <span className="font-semibold">detail page</span> with all metrics and historical trend charts. Save your filter combinations as <span className="font-semibold">presets</span> to revisit them later. Data updates automatically every Wednesday and Saturday.
             </p>
           </div>
 
           {/* Filter guide */}
           <div>
-            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Filter Guide</h3>
+            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">Filter Guide</h3>
             <div className="space-y-4">
               {FILTER_GUIDE.map(({ section, items }) => (
                 <div key={section}>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{section}</p>
+                  <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{section}</p>
                   <div className="space-y-2">
                     {items.map(({ name, desc }) => (
                       <div key={name} className="flex gap-3">
-                        <span className="text-xs font-semibold text-gray-700 w-36 flex-shrink-0 pt-0.5">{name}</span>
-                        <span className="text-xs text-gray-500 leading-relaxed">{desc}</span>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 w-36 flex-shrink-0 pt-0.5">{name}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{desc}</span>
                       </div>
                     ))}
                   </div>
@@ -118,12 +118,12 @@ export default function AboutModal({ onClose }) {
 
           {/* Column guide */}
           <div>
-            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">Table Column Guide</h3>
+            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">Table Column Guide</h3>
             <div className="space-y-2">
               {COLUMN_GUIDE.map(({ name, desc }) => (
                 <div key={name} className="flex gap-3">
-                  <span className="text-xs font-semibold text-gray-700 w-28 flex-shrink-0 pt-0.5">{name}</span>
-                  <span className="text-xs text-gray-500 leading-relaxed">{desc}</span>
+                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 w-28 flex-shrink-0 pt-0.5">{name}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{desc}</span>
                 </div>
               ))}
             </div>

@@ -6,14 +6,14 @@ export function getMarketType(mos) {
 }
 
 const CONFIG = {
-  sellers:  { label: "Seller's Market", bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
-  balanced: { label: 'Balanced Market',  bg: 'bg-gray-100',   text: 'text-gray-600',   dot: 'bg-gray-400' },
-  buyers:   { label: "Buyer's Market",   bg: 'bg-blue-100',   text: 'text-blue-700',   dot: 'bg-blue-500' },
+  sellers:  { label: "Seller's Market", bg: 'bg-orange-100 dark:bg-orange-900/40', text: 'text-orange-700 dark:text-orange-300', dot: 'bg-orange-500' },
+  balanced: { label: 'Balanced Market',  bg: 'bg-gray-100 dark:bg-gray-700',       text: 'text-gray-600 dark:text-gray-300',    dot: 'bg-gray-400 dark:bg-gray-500' },
+  buyers:   { label: "Buyer's Market",   bg: 'bg-blue-100 dark:bg-blue-900/40',     text: 'text-blue-700 dark:text-blue-300',    dot: 'bg-blue-500' },
 };
 
 export default function MarketTag({ mos, size = 'sm' }) {
   const type = getMarketType(mos);
-  if (!type) return <span className="text-gray-300 text-xs">—</span>;
+  if (!type) return <span className="text-gray-300 dark:text-gray-600 text-xs">—</span>;
   const c = CONFIG[type];
   const px = size === 'lg' ? 'px-3 py-1 text-sm' : 'px-2 py-0.5 text-xs';
   return (

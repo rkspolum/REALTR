@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { SlidersHorizontal, RotateCcw, CheckCheck, Search } from 'lucide-react';
+import { SlidersHorizontal, RotateCcw, CheckCheck, ChevronDown } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import DualRangeSlider from './DualRangeSlider.jsx';
 import PresetManager from './PresetManager.jsx';
@@ -7,13 +7,6 @@ import InfoTip from './InfoTip.jsx';
 
 const API = '/api';
 
-const REGION_TYPES = [
-  { value: 'metro',  label: 'Metro Area' },
-  { value: 'county', label: 'County' },
-  { value: 'city',   label: 'City' },
-  { value: 'zip',    label: 'ZIP Code' },
-  { value: 'state',  label: 'State' },
-];
 
 const MARKET_TYPES = [
   { value: '',         label: 'All Markets' },
@@ -163,9 +156,23 @@ const SLIDER_SECTIONS = [
 async function fetchStates() { return (await fetch(`${API}/states`)).json(); }
 async function fetchPropertyTypes() { return (await fetch(`${API}/property-types`)).json(); }
 
-export default function FilterPanel({ onApply }) {
+export default function FilterPanel({ onApply, regionType = 'metro' }) {
   const [ranges, setRanges] = useState(FALLBACK);
   const [local, setLocal] = useState(() => makeDefaultLocal(FALLBACK));
+  const [collapsedSections, setCollapsedSections] = useState(new Set());
+
+  // Sync regionType prop → local state
+  useEffect(() => {
+    setLocal(prev => ({ ...prev, region_type: regionType }));
+  }, [regionType]);
+
+  function toggleSection(title) {
+    setCollapsedSections(prev => {
+      const next = new Set(prev);
+      next.has(title) ? next.delete(title) : next.add(title);
+      return next;
+    });
+  }
 
   const { data: states = [] }        = useQuery({ queryKey: ['states'],         queryFn: fetchStates });
   const { data: propertyTypes = [] } = useQuery({ queryKey: ['propertyTypes'],  queryFn: fetchPropertyTypes });
@@ -213,7 +220,6 @@ export default function FilterPanel({ onApply }) {
     if (local.state_codes)   n++;
     if (local.property_type) n++;
     if (local.market_type)   n++;
-    if (local.region_search) n++;
     for (const sec of SLIDER_SECTIONS) for (const sl of sec.sliders) {
       if (local[sl.minKey] !== ranges[sl.rk].min) n++;
       if (local[sl.maxKey] !== ranges[sl.rk].max) n++;
@@ -231,18 +237,18 @@ export default function FilterPanel({ onApply }) {
   }
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-white border-r border-gray-200 h-[calc(100vh-61px)] overflow-y-auto sticky top-[61px] flex flex-col">
+    <aside className="w-64 flex-shrink-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 h-[calc(100vh-61px)] overflow-y-auto sticky top-[61px] flex flex-col">
       {/* Sticky header */}
-      <div className="sticky top-0 bg-white z-10 border-b border-gray-100 px-4 pt-4 pb-3 shadow-sm">
+      <div className="sticky top-0 bg-white dark:bg-gray-900 z-10 border-b border-gray-100 dark:border-gray-700 px-4 pt-4 pb-3 shadow-sm dark:shadow-gray-950/30">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal size={15} className="text-blue-600" />
-            <h2 className="font-semibold text-gray-900 text-sm">Filters</h2>
+            <SlidersHorizontal size={15} className="text-blue-600 dark:text-blue-400" />
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Filters</h2>
             {activeCount > 0 && (
-              <span className="bg-blue-100 text-blue-700 text-xs font-bold px-1.5 py-0.5 rounded-full">{activeCount}</span>
+              <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-bold px-1.5 py-0.5 rounded-full">{activeCount}</span>
             )}
           </div>
-          <button onClick={handleReset} className="text-xs text-gray-400 hover:text-gray-700 flex items-center gap-1 transition-colors">
+          <button onClick={handleReset} className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1 transition-colors">
             <RotateCcw size={11} /> Reset
           </button>
         </div>
@@ -257,21 +263,6 @@ export default function FilterPanel({ onApply }) {
       {/* Scrollable content */}
       <div className="p-4 space-y-5 overflow-y-auto flex-1">
 
-        {/* Region Type */}
-        <div>
-          <label className="filter-label">Region Type<InfoTip text="Choose the geographic level to screen: Metro Areas, Counties, Cities, ZIP Codes, or States." /></label>
-          <div className="flex flex-col gap-1.5">
-            {REGION_TYPES.map(({ value, label }) => (
-              <label key={value} className="flex items-center gap-2 cursor-pointer group">
-                <input type="radio" name="region_type" value={value}
-                  checked={local.region_type === value} onChange={() => set('region_type', value)}
-                  className="accent-blue-600" />
-                <span className="text-sm text-gray-700 group-hover:text-gray-900">{label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
         {/* Market Type */}
         <div>
           <label className="filter-label">Market Type<InfoTip text="Seller's = under 3 months of supply (high demand). Buyer's = over 6 months (excess inventory). Balanced = 3–6 months." /></label>
@@ -281,7 +272,7 @@ export default function FilterPanel({ onApply }) {
                 <input type="radio" name="market_type" value={value}
                   checked={local.market_type === value} onChange={() => set('market_type', value)}
                   className="accent-blue-600" />
-                <span className="text-sm text-gray-700 group-hover:text-gray-900">{label}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100">{label}</span>
               </label>
             ))}
           </div>
@@ -302,17 +293,17 @@ export default function FilterPanel({ onApply }) {
         <div>
           <label className="filter-label">
             State<InfoTip text="Select one or more states to focus on. Multiple selections show markets across all selected states." />
-            {selectedStates.length > 0 && <span className="ml-1 font-bold text-blue-600">({selectedStates.length})</span>}
+            {selectedStates.length > 0 && <span className="ml-1 font-bold text-blue-600 dark:text-blue-400">({selectedStates.length})</span>}
           </label>
           {states.length === 0 ? (
-            <p className="text-xs text-gray-400 italic">Fetch data first</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 italic">Fetch data first</p>
           ) : (
-            <div className="max-h-40 overflow-y-auto border border-gray-200 rounded p-1 space-y-0.5">
+            <div className="max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded p-1 space-y-0.5 bg-white dark:bg-gray-800">
               {states.map(s => (
-                <label key={s.state_code} className="flex items-center gap-2 px-1 py-0.5 hover:bg-gray-50 rounded cursor-pointer">
+                <label key={s.state_code} className="flex items-center gap-2 px-1 py-0.5 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer">
                   <input type="checkbox" checked={selectedStates.includes(s.state_code)}
                     onChange={() => toggleState(s.state_code)} className="accent-blue-600 flex-shrink-0" />
-                  <span className="text-xs font-medium text-gray-700">{s.state_code}</span>
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{s.state_code}</span>
                 </label>
               ))}
             </div>
@@ -322,51 +313,45 @@ export default function FilterPanel({ onApply }) {
           )}
         </div>
 
-        {/* Region search — shown once a state is selected */}
-        {selectedStates.length > 0 && (
-          <div>
-            <label className="filter-label">Search {local.region_type === 'metro' ? 'Metro' : local.region_type === 'county' ? 'County' : local.region_type === 'city' ? 'City' : local.region_type === 'zip' ? 'ZIP' : 'Region'}<InfoTip text="Type a partial name to find a specific market within your selected states." /></label>
-            <div className="relative">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              <input
-                type="text"
-                value={local.region_search}
-                onChange={e => set('region_search', e.target.value)}
-                placeholder={`Filter by name…`}
-                className="filter-input pl-7"
-              />
-            </div>
-            {local.region_search && (
-              <button onClick={() => set('region_search', '')} className="text-xs text-red-400 hover:text-red-600 mt-1">Clear</button>
-            )}
-          </div>
-        )}
-
         {/* Numeric slider sections */}
-        {SLIDER_SECTIONS.map(section => (
-          <div key={section.title}>
-            <hr className="border-gray-100 mb-4" />
-            <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-4">{section.title}</p>
-            <div className="space-y-6">
-              {section.sliders.map(sl => (
-                <div key={sl.minKey}>
-                  <label className="filter-label">{sl.label}{sl.tip && <InfoTip text={sl.tip} />}</label>
-                  {sl.note && <p className="text-xs text-gray-400 italic -mt-1 mb-1.5">{sl.note}</p>}
-                  <DualRangeSlider
-                    min={ranges[sl.rk].min} max={ranges[sl.rk].max}
-                    minVal={local[sl.minKey]} maxVal={local[sl.maxKey]}
-                    onMinChange={v => set(sl.minKey, v)} onMaxChange={v => set(sl.maxKey, v)}
-                    step={sl.step} format={sl.fmt}
-                  />
+        {SLIDER_SECTIONS.map(section => {
+          const collapsed = collapsedSections.has(section.title);
+          return (
+            <div key={section.title}>
+              <hr className="border-gray-100 dark:border-gray-700 mb-3" />
+              <button
+                onClick={() => toggleSection(section.title)}
+                className="w-full flex items-center justify-between mb-3 group"
+              >
+                <p className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">{section.title}</p>
+                <ChevronDown
+                  size={13}
+                  className={`text-gray-400 dark:text-gray-500 transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`}
+                />
+              </button>
+              {!collapsed && (
+                <div className="space-y-6">
+                  {section.sliders.map(sl => (
+                    <div key={sl.minKey}>
+                      <label className="filter-label">{sl.label}{sl.tip && <InfoTip text={sl.tip} />}</label>
+                      {sl.note && <p className="text-xs text-gray-400 dark:text-gray-500 italic -mt-1 mb-1.5">{sl.note}</p>}
+                      <DualRangeSlider
+                        min={ranges[sl.rk].min} max={ranges[sl.rk].max}
+                        minVal={local[sl.minKey]} maxVal={local[sl.maxKey]}
+                        onMinChange={v => set(sl.minKey, v)} onMaxChange={v => set(sl.maxKey, v)}
+                        step={sl.step} format={sl.fmt}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Saved Presets */}
         <div>
-          <hr className="border-gray-100 mb-4" />
+          <hr className="border-gray-100 dark:border-gray-700 mb-4" />
           <PresetManager currentFilters={local} onLoad={handleLoadPreset} />
         </div>
 

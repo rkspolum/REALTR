@@ -18,18 +18,18 @@ function StatCard({ label, value, icon: Icon, trend, sub }) {
   const isNeg = trend < 0;
   return (
     <div className="stat-card">
-      <div className="flex items-center gap-1.5 text-gray-400 text-xs">
+      <div className="flex items-center gap-1.5 text-gray-400 dark:text-gray-500 text-xs">
         <Icon size={13} />
         <span>{label}</span>
       </div>
-      <div className="text-lg font-bold text-gray-900">{value}</div>
+      <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{value}</div>
       {trend != null && (
-        <div className={`flex items-center gap-0.5 text-xs font-medium ${isPos ? 'text-green-600' : isNeg ? 'text-red-500' : 'text-gray-400'}`}>
+        <div className={`flex items-center gap-0.5 text-xs font-medium ${isPos ? 'text-green-600 dark:text-green-400' : isNeg ? 'text-red-500 dark:text-red-400' : 'text-gray-400 dark:text-gray-500'}`}>
           {isPos ? <TrendingUp size={11} /> : isNeg ? <TrendingDown size={11} /> : null}
           {fmt(trend, 'pct')} YoY
         </div>
       )}
-      {sub && <div className="text-xs text-gray-400">{sub}</div>}
+      {sub && <div className="text-xs text-gray-400 dark:text-gray-500">{sub}</div>}
     </div>
   );
 }

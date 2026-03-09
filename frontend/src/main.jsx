@@ -1,3 +1,10 @@
+// Apply dark mode before first render to avoid flash
+const savedTheme = localStorage.getItem('realtr_theme');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+  document.documentElement.classList.add('dark');
+}
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

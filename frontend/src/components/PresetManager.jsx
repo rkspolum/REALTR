@@ -38,7 +38,7 @@ export default function PresetManager({ currentFilters, onLoad }) {
       <label className="filter-label">Saved Presets</label>
 
       {presets.length === 0 && !inputVisible && (
-        <p className="text-xs text-gray-400 italic mb-2">No presets saved yet</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 italic mb-2">No presets saved yet</p>
       )}
 
       {presets.length > 0 && (
@@ -48,11 +48,11 @@ export default function PresetManager({ currentFilters, onLoad }) {
               <button
                 onClick={() => onLoad(p.filters)}
                 title={`Saved ${new Date(p.savedAt).toLocaleDateString()}`}
-                className="flex-1 text-left text-xs px-2 py-1.5 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded transition-colors truncate"
+                className="flex-1 text-left text-xs px-2 py-1.5 bg-gray-50 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 rounded transition-colors truncate text-gray-700 dark:text-gray-300"
               >
                 {p.name}
               </button>
-              <button onClick={() => handleDelete(i)} className="p-1 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0">
+              <button onClick={() => handleDelete(i)} className="p-1 text-gray-300 dark:text-gray-600 hover:text-red-500 transition-colors flex-shrink-0">
                 <Trash2 size={11} />
               </button>
             </div>
@@ -81,7 +81,7 @@ export default function PresetManager({ currentFilters, onLoad }) {
       ) : (
         <button
           onClick={() => setInputVisible(true)}
-          className="w-full flex items-center justify-center gap-1.5 text-xs py-1.5 border border-dashed border-gray-300 hover:border-blue-400 hover:text-blue-600 text-gray-400 rounded transition-colors"
+          className="w-full flex items-center justify-center gap-1.5 text-xs py-1.5 border border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 hover:text-blue-600 dark:hover:border-blue-500 dark:hover:text-blue-400 text-gray-400 dark:text-gray-500 rounded transition-colors"
         >
           <BookmarkPlus size={12} /> Save current filters
         </button>

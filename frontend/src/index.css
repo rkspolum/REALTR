@@ -4,17 +4,17 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-gray-50 text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100;
   }
 }
 
 @layer components {
   .filter-label {
-    @apply block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5;
+    @apply block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 dark:text-gray-400;
   }
 
   .filter-input {
-    @apply w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white;
+    @apply w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-500;
   }
 
   .filter-section {
@@ -22,15 +22,15 @@
   }
 
   .stat-card {
-    @apply bg-white rounded-lg border border-gray-200 p-4 flex flex-col gap-1;
+    @apply bg-white rounded-lg border border-gray-200 p-4 flex flex-col gap-1 dark:bg-gray-900 dark:border-gray-700;
   }
 
   .th-cell {
-    @apply px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer select-none hover:bg-gray-100 transition-colors;
+    @apply px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer select-none hover:bg-gray-100 transition-colors dark:text-gray-400 dark:hover:bg-gray-800;
   }
 
   .td-cell {
-    @apply px-3 py-2 text-sm text-gray-800 whitespace-nowrap;
+    @apply px-3 py-2 text-sm text-gray-800 whitespace-nowrap dark:text-gray-200;
   }
 }
 
@@ -68,6 +68,10 @@
   transition: box-shadow 0.15s;
 }
 
+.dark .dual-range-input::-webkit-slider-thumb {
+  border-color: #1e293b;
+}
+
 .dual-range-input:active::-webkit-slider-thumb,
 .dual-range-input:focus::-webkit-slider-thumb {
   box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.18), 0 1px 4px rgba(0, 0, 0, 0.25);
@@ -87,4 +91,8 @@
   border: 2.5px solid white;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
   cursor: pointer;
+}
+
+.dark .dual-range-input::-moz-range-thumb {
+  border-color: #1e293b;
 }
