@@ -153,6 +153,10 @@ async function runRefreshForTypes(label, types) {
   const toFetch = types.filter(t => !isInProgress(t));
   if (toFetch.length === 0) return;
   console.log(`[refresh] Starting (${label}) sequentially for: ${toFetch.join(', ')}`);
+  // Mark all as queued immediately so the UI shows them as pending
+  for (const t of toFetch) {
+    if (!isInProgress(t)) fetchStatus[t] = { state: 'queued' };
+  }
   for (const t of toFetch) {
     try {
       await fetchRegionData(t);

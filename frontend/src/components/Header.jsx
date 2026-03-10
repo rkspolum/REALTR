@@ -59,18 +59,21 @@ export default function Header() {
             const db = dbStatus.find(s => s.region_type === value);
             const fp = fetchProgress[value];
             const isActive = ['downloading', 'parsing', 'inserting', 'indexing'].includes(fp?.state);
+            const isQueued = fp?.state === 'queued';
             const state = fp?.state || (db ? 'done' : null);
             return (
               <div
                 key={value}
                 className="flex items-center gap-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-2.5 py-1 text-xs"
               >
-                <StatusDot state={state} />
+                <StatusDot state={isQueued ? 'loading' : state} />
                 <span className="font-medium text-gray-700 dark:text-gray-300">{label}</span>
                 {isActive ? (
                   <span className="text-blue-500">
                     {fp?.rowsInserted ? `${(fp.rowsInserted / 1000).toFixed(0)}K rows…` : fp?.state}
                   </span>
+                ) : isQueued ? (
+                  <span className="text-blue-400">queued…</span>
                 ) : db ? (
                   <span className="text-gray-400 dark:text-gray-500">{db.period_end?.slice(0, 7)}</span>
                 ) : (
